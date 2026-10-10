@@ -1,5 +1,5 @@
 // Package egress implements a deny-by-default outbound HTTP policy for
-// capabilities (WP-05D / SC-09). A capability reaches only destinations that
+// capabilities. A capability reaches only destinations that
 // are declared in its allow-list, over addresses that are validated at
 // connection time, and never forwards credentials across an authority change.
 //

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// R6.4f (capabilities#62): the shared admission helper is the fail-closed
+// The shared admission helper is the fail-closed
 // boundary on its own. Every test here builds the Package DIRECTLY and never
 // calls Parse, Validate or Conforms first — that is the whole point: consumers
 // reach this helper from read/storage paths that deliberately do not re-run

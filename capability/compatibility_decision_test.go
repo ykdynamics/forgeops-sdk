@@ -84,7 +84,7 @@ func TestEmptyAndAbsentDeclarationsProjectToTheSameSet(t *testing.T) {
 
 func TestCanonicalDigestCoversCompatibilityDeclaration(t *testing.T) {
 	// The manifest digest (sha256 of CanonicalJSON) is the immutable revision
-	// identity in platform adoption and control caprevision. A document that
+	// identity when a package is adopted and recorded. A document that
 	// differs ONLY in its compatibleTargetTypes must therefore produce a
 	// different digest — changing compatibility can never ride under the same
 	// revision identity.
@@ -109,7 +109,7 @@ func TestTypedDocCanonicalJSONDeterministic(t *testing.T) {
 	// YAML and JSON documents with the same typed declaration but different key
 	// order/whitespace must canonicalize to identical bytes (the digest input).
 	yamlDoc := typedDoc("[kubernetes.cluster, sap.system/v2]")
-	jsonDoc := `{"schemaVersion":"capability.v1","runtime":{"interface":"mcp","runtimeContract":"runtime.v1"},"identity":{"key":"acme.service.restart","version":"2.0.0","artifactDigest":"sha256:52b350d25777409fe32df0dc1ca6809f74dade7355b8e79a39bcc87e38a9e3be"},"contract":{"description":"restarts the acme service (R6.2b conformance fixture)","inputSchema":{"type":"object","required":["service"],"additionalProperties":false,"properties":{"service":{"type":"string","minLength":1}}},"outputSchema":{"type":"object","required":["restarted"],"additionalProperties":false,"properties":{"restarted":{"type":"boolean"}}}},"executionBoundary":{"risk":"ask","requiredSecrets":["SERVICE_TOKEN"],"compatibleTargetTypes":["kubernetes.cluster","sap.system/v2"]}}`
+	jsonDoc := `{"schemaVersion":"capability.v1","runtime":{"interface":"mcp","runtimeContract":"runtime.v1"},"identity":{"key":"acme.service.restart","version":"2.0.0","artifactDigest":"sha256:52b350d25777409fe32df0dc1ca6809f74dade7355b8e79a39bcc87e38a9e3be"},"contract":{"description":"restarts the acme service (compatibility conformance fixture)","inputSchema":{"type":"object","required":["service"],"additionalProperties":false,"properties":{"service":{"type":"string","minLength":1}}},"outputSchema":{"type":"object","required":["restarted"],"additionalProperties":false,"properties":{"restarted":{"type":"boolean"}}}},"executionBoundary":{"risk":"ask","requiredSecrets":["SERVICE_TOKEN"],"compatibleTargetTypes":["kubernetes.cluster","sap.system/v2"]}}`
 	a, err := CanonicalJSON([]byte(yamlDoc))
 	if err != nil {
 		t.Fatalf("canonicalize YAML: %v", err)

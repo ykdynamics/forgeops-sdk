@@ -35,8 +35,8 @@ func Parse(data []byte) (*Package, error) {
 // deterministic key order, and the embedded schemas land in their canonical
 // JSON shape. Two semantically identical documents (any key order, any
 // whitespace) canonicalize identically — this is the exact bytes a manifest
-// digest covers, so consumers (the registry in forgeops-platform, revision
-// admission in forgeops-control) can verify that a declared digest is the
+// digest covers, so consumers (a registry admitting the package, a control
+// plane recording its revision) can verify that a declared digest is the
 // digest of the actual package.
 func CanonicalJSON(data []byte) ([]byte, error) {
 	var v any
@@ -136,7 +136,7 @@ func validateBoundary(b ExecutionBoundary) []Error {
 	return errs
 }
 
-// validateCompatibleTargetTypes enforces the R6.2b declaration rules
+// validateCompatibleTargetTypes enforces the compatibility declaration rules
 // deterministically (slice order): bounded count, bounded per-entry grammar
 // (mirroring the typed Target model), and no two entries that normalize to the
 // same name/vN contract — a type may be spelled once only, so the declaration
@@ -174,10 +174,10 @@ func validateCompatibleTargetTypes(list []string) []Error {
 	return errs
 }
 
-// validateEffect enforces the R6.4a Effect v1 block deterministically. The
-// effect block is optional (legacy documents stay on the untyped lane); when
-// present, the contract must be effect.v1 and all four semantics must be one of
-// the closed vocabularies. A lone R6.4d extensions list makes the block present
+// validateEffect enforces the Effect v1 block deterministically. The effect
+// block is optional (legacy documents stay on the untyped lane); when present,
+// the contract must be effect.v1 and all four semantics must be one of the
+// closed vocabularies. A lone extensions list makes the block present
 // too: an extension can never enter a document that declares no core contract.
 func validateEffect(e Effect) []Error {
 	var errs []Error
@@ -211,7 +211,7 @@ func validateEffect(e Effect) []Error {
 	return errs
 }
 
-// validateEffectExtensions enforces the R6.4d extension rules deterministically
+// validateEffectExtensions enforces the extension rules deterministically
 // (slice order, then sorted attribute keys): a bounded count, a namespaced and
 // explicitly versioned contract spelled once, and an explicit authority class —
 // an extension that declares no class is refused rather than read as

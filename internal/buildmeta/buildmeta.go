@@ -1,7 +1,7 @@
 // Package buildmeta generates minimal, honest supply-chain metadata for a
-// packaged capability (WP-R5.2c, capabilities#43): a CycloneDX SBOM of the Go
+// packaged capability: a CycloneDX SBOM of the Go
 // modules the implementation is built from + a build provenance statement.
-// The payloads are the shape the platform registry's BuildEvidence (WP-22.4)
+// The payloads are the shape the platform registry's BuildEvidence
 // accepts (kind sbom|provenance; format cyclonedx|slsa-provenance).
 package buildmeta
 

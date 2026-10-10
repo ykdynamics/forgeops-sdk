@@ -145,7 +145,7 @@ func ResolveToolchain(dir string) (string, error) {
 	}
 	m := toolchainDirective.FindSubmatch(raw)
 	if m == nil {
-		return "", fmt.Errorf("%s declares no exact `toolchain goX.Y.Z` directive: a build here would be made by whichever compiler is installed, and the resulting digest would not reproduce. Pin the compiler in %s (see #524)", path, path)
+		return "", fmt.Errorf("%s declares no exact `toolchain goX.Y.Z` directive: a build here would be made by whichever compiler is installed, and the resulting digest would not reproduce. Pin the compiler in %s: add `toolchain %s`, the compiler this SDK is qualified with", path, path, PinnedToolchain)
 	}
 	return string(m[1]), nil
 }
@@ -178,9 +178,8 @@ func PackagePattern(moduleRoot, packageDir string) (string, error) {
 }
 
 // The recipe. Every flag here is part of the identity: changing one changes
-// every digest in manifests/ without changing a byte of source. They are
-// listed once, here, because they used to be maintained in three places and
-// only two of them agreed.
+// every pinned digest without changing a byte of source. They are listed once,
+// here, because a recipe maintained in several places drifts.
 const (
 	// The module-cache build and a vendor-directory build embed different
 	// go.sum h1: hashes in the build info.

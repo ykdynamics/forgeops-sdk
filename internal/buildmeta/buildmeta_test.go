@@ -29,7 +29,7 @@ func TestProvenance(t *testing.T) {
 
 // TestGoModulesSBOM requires a go toolchain + a module; it uses this repo.
 func TestGoModulesSBOM(t *testing.T) {
-	// This test runs inside the forgeops-capabilities module, so `go list -m`
+	// This test runs inside the forgeops-sdk module, so `go list -m`
 	// has a real module graph.
 	out, err := GoModulesSBOM("..")
 	if err != nil {

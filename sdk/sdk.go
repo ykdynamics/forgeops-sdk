@@ -28,14 +28,14 @@ import (
 type Context struct {
 	RunID string
 	Input json.RawMessage
-	// Attempt (WP-R5.2b) is the canonical attempt identity the executor
+	// Attempt is the canonical attempt identity the executor
 	// delivered (action_id, tenant, attempt_number, idempotency_key) — the
 	// authoritative lineage a capability uses for its intended-effect receipt.
 	// Nil for executors that predate the run context.
 	Attempt *runtimecontract.RunContext
 
-	// deadline is the run's action deadline when the worker delivered one
-	// (WP-05E): the handler terminates the implementation when it fires.
+	// deadline is the run's action deadline when the worker delivered one:
+	// the handler terminates the implementation when it fires.
 	deadline time.Time
 
 	runtimeURL string
@@ -162,9 +162,9 @@ type payload struct {
 	RuntimeToken string          `json:"runtime_token"`
 	RuntimeURL   string          `json:"runtime_url"`
 	// Deadline is the run's action deadline (RFC3339), when the worker sent
-	// one. The handler terminates the implementation when it fires (WP-05E).
+	// one. The handler terminates the implementation when it fires.
 	Deadline string `json:"deadline,omitempty"`
-	// Context is the canonical attempt identity (WP-R5.2b): the authoritative
+	// Context is the canonical attempt identity: the authoritative
 	// action id + lineage the implementation acts under. Executors that predate
 	// the context leave it nil.
 	Context *runtimecontract.RunContext `json:"context,omitempty"`
@@ -177,7 +177,7 @@ type handlerConfig struct {
 	contract *Contract
 }
 
-// WithContract declares the capability's exact input/output contract (WP-05A):
+// WithContract declares the capability's exact input/output contract:
 // the SDK rejects invalid input before the implementation runs and fails the
 // run when the output violates the declared schema.
 func WithContract(c *Contract) HandlerOption {
@@ -214,7 +214,7 @@ func NewHandler(h Handler, opts ...HandlerOption) http.Handler {
 		// runtime_url (callbacks no-op without it) and a token.
 		log.Printf("sdk: run=%s input=%dB runtime_url=%q token=%v deadline=%v", p.RunID, len(p.Input), rc.runtimeURL, p.RuntimeToken != "", rc.deadline)
 
-		// WP-05A / SC-10: reject invalid input BEFORE the implementation runs.
+		// Reject invalid input BEFORE the implementation runs.
 		if cfg.contract != nil && len(cfg.contract.InputSchema) > 0 {
 			var in any
 			if len(rc.Input) > 0 {
@@ -229,7 +229,7 @@ func NewHandler(h Handler, opts ...HandlerOption) http.Handler {
 			}
 		}
 
-		// WP-05E: bound the implementation to the run deadline.
+		// Bound the implementation to the run deadline.
 		implCtx := r.Context()
 		if !rc.deadline.IsZero() {
 			var cancel context.CancelFunc
@@ -252,7 +252,7 @@ func NewHandler(h Handler, opts ...HandlerOption) http.Handler {
 			return
 		}
 
-		// WP-05A / SC-10: invalid output can never cross the boundary as success.
+		// Invalid output can never cross the boundary as success.
 		if cfg.contract != nil && len(cfg.contract.OutputSchema) > 0 {
 			outJSON, err := json.Marshal(out)
 			if err == nil {
@@ -303,7 +303,7 @@ func writeErr(w http.ResponseWriter, status int, msg string) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
-// writeStructured writes a safe, classed run error (WP-05A): the machine-
+// writeStructured writes a safe, classed run error: the machine-
 // readable error_class plus a human-safe message.
 func writeStructured(w http.ResponseWriter, status int, class ErrorClass, msg string) {
 	w.Header().Set("Content-Type", "application/json")
@@ -315,7 +315,7 @@ func writeStructured(w http.ResponseWriter, status int, class ErrorClass, msg st
 // reports. It is a table rather than a chain of ifs so that adding a class
 // without deciding its status is visibly incomplete rather than silently a 500.
 //
-// The refusal classes are DELIBERATELY not 5xx (capabilities#68): a capability
+// The refusal classes are DELIBERATELY not 5xx: a capability
 // declining on authority grounds is not a fault, and reporting it as one makes a
 // boundary being enforced indistinguishable from a crash — in logs, in metrics,
 // and to a retry policy that treats 5xx as transient.

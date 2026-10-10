@@ -52,7 +52,7 @@ func TestEffectV1BlockConformsAndRoundTrips(t *testing.T) {
 }
 
 func TestEffectAbsentIsLegacyLane(t *testing.T) {
-	// Documents without an effect block (the whole pre-R6.4 population) stay
+	// Documents without an effect block (everything written before it) stay
 	// valid on the untyped lane.
 	if errs := mustValidate(t, positive); len(errs) != 0 {
 		t.Fatalf("legacy fixture should still conform, got %v", errs)

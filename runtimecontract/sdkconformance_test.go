@@ -69,7 +69,7 @@ func TestSDKHandlerConformsToRawContract(t *testing.T) {
 	}
 }
 
-// TestRunContextDeliveredToCapability WP-R5.2b: the canonical attempt identity
+// TestRunContextDeliveredToCapability: the canonical attempt identity
 // rides the run envelope and the SDK exposes it — the capability takes its
 // authoritative action id from the context, never one assembled from input.
 func TestRunContextDeliveredToCapability(t *testing.T) {

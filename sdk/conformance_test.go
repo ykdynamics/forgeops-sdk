@@ -20,8 +20,8 @@ func runRequest(t *testing.T, h http.Handler, body string) *httptest.ResponseRec
 	return w
 }
 
-// TestConformance_InvalidInputRejectedBeforeImplementation is the SC-10
-// acceptance: invalid input fails the run and the implementation never runs.
+// TestConformance_InvalidInputRejectedBeforeImplementation: invalid input fails
+// the run and the implementation never runs.
 func TestConformance_InvalidInputRejectedBeforeImplementation(t *testing.T) {
 	var invoked atomic.Bool
 	h := NewHandler(func(ctx context.Context, rc *Context) (any, error) {
@@ -38,7 +38,7 @@ func TestConformance_InvalidInputRejectedBeforeImplementation(t *testing.T) {
 		t.Fatalf("code = %d body = %s", w.Code, w.Body.String())
 	}
 	if invoked.Load() {
-		t.Fatal("the implementation must not run for invalid input (SC-10)")
+		t.Fatal("the implementation must not run for invalid input")
 	}
 	var resp struct {
 		Class string `json:"error_class"`
@@ -49,8 +49,7 @@ func TestConformance_InvalidInputRejectedBeforeImplementation(t *testing.T) {
 	}
 }
 
-// TestConformance_InvalidOutputCannotCrossAsSuccess is the SC-10 acceptance:
-// output violating the declared schema fails the run — it never crosses the
+// TestConformance_InvalidOutputCannotCrossAsSuccess: output violating the declared schema fails the run — it never crosses the
 // boundary as success.
 func TestConformance_InvalidOutputCannotCrossAsSuccess(t *testing.T) {
 	h := NewHandler(func(ctx context.Context, rc *Context) (any, error) {
@@ -90,8 +89,7 @@ func TestConformance_ValidInputAndOutputSucceed(t *testing.T) {
 	}
 }
 
-// TestConformance_DeadlineTerminatesImplementationWithinBound is the SC-10/17
-// deadline acceptance: a run deadline that passes terminates the implementation
+// TestConformance_DeadlineTerminatesImplementationWithinBound: a run deadline that passes terminates the implementation
 // and the run fails with the timeout class — within the bound.
 func TestConformance_DeadlineTerminatesImplementationWithinBound(t *testing.T) {
 	h := NewHandler(func(ctx context.Context, rc *Context) (any, error) {
@@ -161,7 +159,7 @@ func (m *mutationCapability) book(ctx context.Context, rc *Context) (any, error)
 	return map[string]any{"appointment_id": id, "duplicate": false}, nil
 }
 
-// TestConformance_MutationIdempotency is the SC-17 acceptance: repeated
+// TestConformance_MutationIdempotency: repeated
 // identical idempotency keys produce one external mutation; changed content
 // cannot reuse an existing key.
 func TestConformance_MutationIdempotency(t *testing.T) {
@@ -186,7 +184,7 @@ func TestConformance_MutationIdempotency(t *testing.T) {
 		t.Fatalf("duplicate delivery must be a duplicate: code=%d body=%s", w2.Code, w2.Body.String())
 	}
 	if c.effects != 1 {
-		t.Fatalf("external effects = %d, want exactly 1 (SC-17)", c.effects)
+		t.Fatalf("external effects = %d, want exactly 1", c.effects)
 	}
 
 	// Changed content reusing the key is rejected.

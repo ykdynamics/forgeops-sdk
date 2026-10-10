@@ -1,5 +1,5 @@
 // Package runtimecontract is the machine-readable, dependency-free form of the
-// normative capability runtime contract v1 (WP-R5.2b, capabilities#42) — see
+// normative capability runtime contract v1 — see
 // docs/runtime-contract-v1.md. The Go SDK (sdk/) is the REFERENCE
 // implementation of this contract; this package exists so any implementation
 // (any language) can be built and verified against the same wire semantics
@@ -44,14 +44,14 @@ type RunRequest struct {
 	RuntimeToken string          `json:"runtime_token"`
 	RuntimeURL   string          `json:"runtime_url"`
 	Deadline     string          `json:"deadline,omitempty"`
-	// Context (WP-R5.2b) is the canonical attempt identity the executor
+	// Context is the canonical attempt identity the executor
 	// delivers with the run. The capability takes its authoritative action id
 	// from HERE — never one assembled from the input. Optional: executors that
 	// predate the context send only run_id + input.
 	Context *RunContext `json:"context,omitempty"`
 }
 
-// RunContext is the canonical attempt/action identity of one run (WP-R5.2b).
+// RunContext is the canonical attempt/action identity of one run.
 // It mirrors the agent's canonical dispatch bindings so a capability knows the
 // exact action lineage it is being asked to perform and can keep its
 // intended-effect receipt stable across retries.

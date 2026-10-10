@@ -9,20 +9,19 @@ import (
 	"strings"
 )
 
-// R6.2b — capability target-type compatibility.
+// Capability target-type compatibility.
 //
 // A capability revision may declare the versioned target-type schema contracts
-// it is compatible with. The grammar and normalization rules below mirror the
-// R6.2a typed Target model in forgeops-platform/internal/target (platform#394):
-// a dotted lowercase type name with an optional /vN qualifier that defaults to
-// v1 and is always materialized in the canonical contract form (name/vN).
-// forgeops-capabilities is a dependency-free schema module that platform and
-// control import, so the two copies are kept in lockstep by mirrored conformance
-// vectors in each repo's tests.
+// it is compatible with. The grammar and normalization rules below are those of
+// ForgeOps' typed target model: a dotted lowercase type name with an optional
+// /vN qualifier that defaults to v1 and is always materialized in the canonical
+// contract form (name/vN). ForgeOps' own target model keeps the same rules, held
+// in lockstep by mirrored conformance vectors.
 //
 // The declaration is part of the canonical capability.v1 document, so the
-// manifest digest (sha256 of capability.CanonicalJSON) — which is the immutable
-// revision identity in platform adoption and control caprevision — covers it.
+// manifest digest (sha256 of capability.CanonicalJSON) — the immutable revision
+// identity when a registry adopts a package and a control plane records it —
+// covers it.
 // Changing compatibility therefore requires a new capability revision; it can
 // never be re-pointed under the same (key, version, digest).
 
@@ -30,15 +29,15 @@ const (
 	// MaxCompatibleTargetTypes bounds the declared compatible type set.
 	MaxCompatibleTargetTypes = 16
 	// MaxTargetTypeLength bounds one declared type string including its /vN
-	// qualifier (mirrors forgeops-platform internal/target MaxTypeLength).
+	// qualifier (the same bound as ForgeOps' target model).
 	MaxTargetTypeLength = 128
 )
 
 var (
-	// targetTypeNameRe mirrors internal/target's type-name grammar: dotted
+	// targetTypeNameRe is the target model's type-name grammar: dotted
 	// lowercase words, each starting with a letter.
 	targetTypeNameRe = regexp.MustCompile(`^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)*$`)
-	// targetTypeVersionRe mirrors internal/target's type-version grammar:
+	// targetTypeVersionRe is the target model's type-version grammar:
 	// vN with N >= 1 and no leading zeros.
 	targetTypeVersionRe = regexp.MustCompile(`^v([1-9][0-9]*)$`)
 )

@@ -15,12 +15,12 @@ import (
 	"github.com/ykdynamics/forgeops-sdk/internal/capsign"
 )
 
-// cmdPackage (WP-R5.2c, capabilities#43) turns a dev capability project into an
+// cmdPackage turns a dev capability project into an
 // immutable, publishable Capability Package v1: it builds the implementation
 // with the repository's ONE implementation recipe (internal/implbuild), pins
 // the resulting sha256 into capability.yaml's identity.artifactDigest, and
 // (with --key) signs the canonical manifest with the publisher's P-256 key —
-// emitting exactly the register payload the platform registry (R5.1b) consumes.
+// emitting exactly the register payload the platform registry consumes.
 //
 // The build used to be a bare local compiler call, which made this tool able to
 // pin the HOST platform with the caller's compiler into identity.artifactDigest
@@ -137,7 +137,7 @@ func cmdPackage(args []string) error {
 		signed = true
 	}
 
-	// 4. Supply-chain metadata (WP-R5.2c): a CycloneDX SBOM of the Go modules
+	// 4. Supply-chain metadata: a CycloneDX SBOM of the Go modules
 	// the implementation is built from + a provenance statement binding the
 	// immutable package to the build.
 	if *sbomOut != "" {
