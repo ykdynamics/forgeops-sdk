@@ -51,8 +51,8 @@ func TestRenderGoModRequiresTheRelease(t *testing.T) {
 	if !strings.Contains(mod, "\nrequire github.com/ykdynamics/forgeops-sdk v0.1.0\n") {
 		t.Fatalf("go.mod does not require the SDK release:\n%s", mod)
 	}
-	if strings.Contains(mod, "replace") || strings.Contains(mod, "forgeops-capabilities") {
-		t.Fatalf("a release project must not replace the SDK or name the private module:\n%s", mod)
+	if strings.Contains(mod, "replace") || strings.Count(mod, "github.com/ykdynamics/") != 1 {
+		t.Fatalf("a release project must require exactly the SDK, with no replace:\n%s", mod)
 	}
 	// The scaffolded project must pin the compiler: `forgeops-cap package`
 	// refuses to pin an implementation digest without an exact toolchain.

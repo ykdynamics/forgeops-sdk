@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// R6.4d conformance vectors (capabilities#58): namespaced, versioned Effect
+// Conformance vectors for namespaced, versioned Effect
 // extensions and the fail-closed rule for authority-relevant ones.
 
 const effectWithExtensions = `contract: effect.v1
@@ -67,8 +67,8 @@ func TestEffectExtensionsConformAndRoundTrip(t *testing.T) {
 }
 
 func TestEffectExtensionsAbsentStaysValid(t *testing.T) {
-	// The whole pre-R6.4d population — including R6.4a effect blocks with no
-	// extensions — keeps conforming.
+	// Every document written before extensions existed — including effect
+	// blocks with no extensions — keeps conforming.
 	if errs := mustValidate(t, docWithEffect(validEffect)); len(errs) != 0 {
 		t.Fatalf("effect block without extensions should conform, got %v", errs)
 	}

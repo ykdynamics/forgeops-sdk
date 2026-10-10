@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-// capabilities#68: a capability declining on AUTHORITY grounds is not a fault.
+// A capability declining on AUTHORITY grounds is not a fault.
 //
 // Reporting it as 500/internal made a boundary being enforced indistinguishable
 // from a crash — in logs, in metrics, and to a retry policy that treats 5xx as
@@ -75,7 +75,7 @@ func TestGenuineFaultsAreStillInternal(t *testing.T) {
 
 func TestStatusForClassCoversEveryClass(t *testing.T) {
 	// Every declared class must have a deliberate status. A class added without
-	// one silently becomes a 500, which is exactly the defect #68 is about.
+	// one silently becomes a 500: a refusal reported as a fault again.
 	for _, c := range []ErrorClass{ClassInvalidInput, ClassInvalidOutput, ClassTimeout, ClassDenied, ClassRefused, ClassInternal} {
 		got := statusForClass(c)
 		if got < 100 || got > 599 {

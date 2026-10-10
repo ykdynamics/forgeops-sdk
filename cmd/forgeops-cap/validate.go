@@ -8,7 +8,7 @@ import (
 	"github.com/ykdynamics/forgeops-sdk/capability"
 )
 
-// cmdValidate validates a capability.yaml against the R5.1 canonical schema
+// cmdValidate validates a capability.yaml against the capability.v1 schema
 // with deterministic, actionable errors.
 func cmdValidate(args []string) error {
 	fs := flag.NewFlagSet("validate", flag.ExitOnError)

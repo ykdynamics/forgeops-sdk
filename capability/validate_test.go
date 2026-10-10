@@ -14,7 +14,7 @@ identity:
   artifactDigest: sha256:52b350d25777409fe32df0dc1ca6809f74dade7355b8e79a39bcc87e38a9e3be
   implementationPlatform: linux/arm64
 contract:
-  description: restarts the acme service (WP-R5.1a conformance fixture)
+  description: restarts the acme service (conformance fixture)
   inputSchema:
     type: object
     required: [service]

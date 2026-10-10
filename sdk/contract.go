@@ -9,14 +9,14 @@ import (
 )
 
 // RuntimeContractVersion is the version of the http-runtime request, callback
-// and result contract this SDK speaks (WP-05A / WP-R5.2b). The normative,
+// and result contract this SDK speaks. The normative,
 // language-neutral contract lives in runtimecontract (docs/runtime-contract-v1.md);
 // this SDK is its reference implementation, so the version string is the same
 // single value.
 const RuntimeContractVersion = runtimecontract.Version
 
-// Contract is a capability's exact, schema-declared input/output contract
-// (WP-05A / SC-10). It mirrors the manifest (manifests/*.yaml) at runtime so
+// Contract is a capability's exact, schema-declared input/output contract. It
+// mirrors the input/output schemas of its capability.yaml at runtime so
 // the SDK can reject invalid input before the implementation runs and prevent
 // invalid output from crossing the boundary as success.
 type Contract struct {
@@ -28,12 +28,12 @@ type Contract struct {
 	InputSchema  json.RawMessage
 	OutputSchema json.RawMessage
 	// IdempotencyKey is the required input field (dotted path) that mutation
-	// capabilities use as their stable idempotency key (WP-05E / SC-17).
+	// capabilities use as their stable idempotency key.
 	IdempotencyKey string
 }
 
-// ErrorClass classifies a structured run error (WP-05A: safe, structured
-// errors). The class is a machine-readable string; the message is human-safe.
+// ErrorClass classifies a structured run error (safe, structured errors). The
+// class is a machine-readable string; the message is human-safe.
 type ErrorClass string
 
 const (
@@ -50,8 +50,7 @@ const (
 	// ClassDenied: the capability refuses by declaration (e.g. a deny stub).
 	ClassDenied ErrorClass = "denied"
 	// ClassRefused: the capability declines on AUTHORITY grounds — it was asked
-	// to act outside what this deployment gave it. It is not a fault
-	// (capabilities#68).
+	// to act outside what this deployment gave it. It is not a fault.
 	//
 	// The distinction is operational, not cosmetic. Before this existed, a
 	// capability correctly refusing a target it was never given returned

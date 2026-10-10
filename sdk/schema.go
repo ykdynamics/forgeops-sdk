@@ -6,7 +6,7 @@ import (
 )
 
 // validateSchema validates value against a JSON Schema. It implements the
-// subset the R1 capability manifests use (WP-05A / SC-10): type, required,
+// subset capability manifests use: type, required,
 // properties, items, additionalProperties, enum and const. Everything else is
 // ignored (validation is best-effort structural — it never rejects a value
 // that the declared contract did not describe).

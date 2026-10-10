@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-// TestCmdPublishPostsToRegistry validates the R5.2c publish handoff: the
+// TestCmdPublishPostsToRegistry validates the publish handoff: the
 // register payload is POSTed to the registry endpoint with the bearer token.
 func TestCmdPublishPostsToRegistry(t *testing.T) {
 	var gotPath, gotAuth string

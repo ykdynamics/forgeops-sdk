@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// R6.4d — namespaced Effect extension contract and fail-closed rules
-// (capabilities#58, depends on the R6.4a Effect v1 block).
+// Namespaced Effect extension contract and fail-closed rules, on top of the
+// Effect v1 block.
 //
 // Domains need effect semantics core Effect v1 deliberately does not model
 // (settlement windows, clinical consent, blast radius conventions). The rule
@@ -29,8 +29,8 @@ import (
 //     extension payloads are bounded string attributes, not arbitrary
 //     authority-bearing metadata;
 //   - the declaration lives inside the canonical document, so the manifest
-//     digest (sha256 of CanonicalJSON — the immutable revision identity in
-//     platform adoption and control caprevision) covers it: changing an
+//     digest (sha256 of CanonicalJSON — the immutable revision identity when
+//     a package is adopted and recorded) covers it: changing an
 //     extension is a new capability revision, never a re-pointed one.
 //
 // Effect stays descriptive throughout. An extension — informational or
@@ -112,8 +112,8 @@ func (e Effect) Declared() bool {
 }
 
 // NormalizeEffectExtension validates a declared or candidate extension contract
-// and returns its canonical namespace.name/vN form. Unlike the R6.2b
-// target-type grammar, the version is NOT defaulted: an extension must spell
+// and returns its canonical namespace.name/vN form. Unlike the target-type
+// grammar, the version is NOT defaulted: an extension must spell
 // its version, so a consumer's understood set and a package's declaration can
 // never silently agree across two different revisions of one extension.
 func NormalizeEffectExtension(raw string) (string, error) {
@@ -232,7 +232,7 @@ type EffectExtensionAdmission struct {
 	// malformed declaration. It is the single complete list a consumer can gate
 	// on without having to know the difference.
 	Unrecognized []string
-	// Malformed (R6.4f) lists the declarations that could not be normalized or
+	// Malformed lists the declarations that could not be normalized or
 	// classified at all — an unreadable name, or an authority class outside the
 	// closed vocabulary. Reported verbatim when there is no canonical form.
 	// These also appear in Unrecognized; this field is the typed detail for an
@@ -246,14 +246,13 @@ type EffectExtensionAdmission struct {
 	Reason string
 }
 
-// AdmitEffectExtensions is the fail-closed rule (R6.4d, strengthened in R6.4f)
-// every consumer of Effect facts — policy, review, admission — applies before
+// AdmitEffectExtensions is the fail-closed rule every consumer of Effect facts — policy, review, admission — applies before
 // trusting them. A package is REFUSED when it declares either:
 //
 //   - an authority_relevant extension the consumer does not understand — the
 //     extension may be exactly what qualifies the core semantics; or
 //   - an extension that cannot be classified at all: an unreadable name, or an
-//     authority class outside the closed vocabulary (R6.4f, capabilities#62).
+//     authority class outside the closed vocabulary.
 //
 // The second rule is the one a caller cannot safely be left to add itself. For
 // a CONFORMING document it is unreachable — Validate refuses both shapes — but

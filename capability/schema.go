@@ -1,13 +1,11 @@
-// Package capability is the normative Capability Package v1 contract
-// (WP-R5.1a, #389): the one canonical capability.yaml identity that spans
-// developer build -> registry/adoption -> customer review -> edge admission ->
-// execution -> evidence.
+// Package capability is the normative Capability Package v1 contract: the one
+// canonical capability.yaml identity that spans developer build ->
+// registry/adoption -> customer review -> edge admission -> execution ->
+// evidence.
 //
-// The package is intentionally dependency-free (stdlib + YAML only) so the
-// same validator can be consumed from forgeops-control (edge admission, R5.1c),
-// forgeops-platform (registry identity, R5.1b), the R5.2 developer tooling,
-// and the R5.9 qualification harness. If a non-Go consumer or OCI distribution
-// later needs an independent module, this package extracts as-is.
+// The package is intentionally dependency-free (stdlib + YAML only), so the
+// same validator serves edge admission, registry identity, developer tooling
+// and qualification alike: what it accepts and refuses is the contract.
 package capability
 
 import (
@@ -20,8 +18,8 @@ import (
 // before any field is interpreted.
 const SchemaVersion = "capability.v1"
 
-// EffectContract is the versioned contract identity of the R6.4a Effect v1
-// block (capabilities#57). A present effect block must declare exactly this
+// EffectContract is the versioned contract identity of the Effect v1
+// block. A present effect block must declare exactly this
 // contract; the four semantics below are the closed effect.v1 vocabulary.
 const EffectContract = "effect.v1"
 
@@ -47,7 +45,7 @@ type Package struct {
 	// risk class, secrets, egress, target class. Binding happens separately
 	// (install != execution authorization).
 	ExecutionBoundary ExecutionBoundary `json:"executionBoundary" yaml:"executionBoundary"`
-	// Effect (R6.4a, capabilities#57) is the minimum immutable effect.v1
+	// Effect is the minimum immutable effect.v1
 	// contract: DESCRIPTIVE operation semantics (side effect, reversibility,
 	// idempotency, verification) — never allow/ask/deny policy, which stays in
 	// ExecutionBoundary.Risk. Additive and optional: legacy documents without
@@ -97,20 +95,19 @@ type ExecutionBoundary struct {
 	// Egress declares allowed outbound destinations (allowlist semantics).
 	Egress []string `json:"egress,omitempty" yaml:"egress,omitempty"`
 	// Target is the v1 legacy declared target class the capability may act on
-	// (R5.1 semantics: one free-form class label, part of the frozen historical
-	// corpus). Typed Target v2 compatibility is declared separately in
+	// (one free-form class label, kept unchanged for documents already
+	// written). Typed Target v2 compatibility is declared separately in
 	// CompatibleTargetTypes; this field is never reinterpreted as a typed
 	// target-type contract.
 	Target string `json:"target,omitempty" yaml:"target,omitempty"`
-	// CompatibleTargetTypes (R6.2b) declares, deterministically, the versioned
+	// CompatibleTargetTypes declares, deterministically, the versioned
 	// target-type schema contracts this immutable capability revision is
 	// compatible with — e.g. "kubernetes.cluster" or "sap.system/v2" — NOT
 	// concrete customer targets and NOT invocation resources. The declaration
 	// is part of the canonical document, so the manifest digest (revision
 	// identity) covers it: changing compatibility requires a new capability
-	// revision. Grammar mirrors the R6.2a typed Target model in
-	// forgeops-platform internal/target (dotted lowercase type name + optional
-	// /vN; the canonical form spells name/vN).
+	// revision. Grammar is that of ForgeOps' typed target model (dotted
+	// lowercase type name + optional /vN; the canonical form spells name/vN).
 	CompatibleTargetTypes []string `json:"compatibleTargetTypes,omitempty" yaml:"compatibleTargetTypes,omitempty"`
 }
 
@@ -122,7 +119,7 @@ type Runtime struct {
 	RuntimeContract string `json:"runtimeContract" yaml:"runtimeContract"`
 }
 
-// Effect is the minimum immutable Effect v1 contract (R6.4a, capabilities#57):
+// Effect is the minimum immutable Effect v1 contract:
 // descriptive semantics of what an operation does and how verifiable that is.
 // It is NOT policy — the allow/ask/deny authority class lives in
 // ExecutionBoundary.Risk. All four fields are required when the effect block is
@@ -142,7 +139,7 @@ type Effect struct {
 	// Verification is what the capability offers to prove its intended
 	// effect occurred. none | supported | required
 	Verification string `json:"verification" yaml:"verification"`
-	// Extensions (R6.4d, capabilities#58) are bounded, namespaced, versioned
+	// Extensions are bounded, namespaced, versioned
 	// domain extensions of these semantics. They never replace or relax the
 	// four core fields above, and an authority-relevant extension a consumer
 	// does not understand fails closed (AdmitEffectExtensions). Optional.

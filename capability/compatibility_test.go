@@ -15,7 +15,7 @@ identity:
   version: 2.0.0
   artifactDigest: sha256:52b350d25777409fe32df0dc1ca6809f74dade7355b8e79a39bcc87e38a9e3be
 contract:
-  description: restarts the acme service (R6.2b conformance fixture)
+  description: restarts the acme service (compatibility conformance fixture)
   inputSchema:
     type: object
     required: [service]
@@ -39,8 +39,8 @@ runtime:
 }
 
 func TestNormalizeTargetTypeMirrorsTypedTargetModel(t *testing.T) {
-	// The grammar/vector set mirrors forgeops-platform internal/target
-	// ParseType tests so the two copies cannot drift silently.
+	// The grammar/vector set mirrors the tests of ForgeOps' own target model,
+	// so the two copies cannot drift silently.
 	valid := map[string]string{
 		"kubernetes.cluster":    "kubernetes.cluster/v1",
 		"kubernetes.cluster/v1": "kubernetes.cluster/v1",
@@ -100,8 +100,8 @@ func TestCompatibleTargetTypesDeclarationConformsAndProjects(t *testing.T) {
 }
 
 func TestLegacyDocsWithoutDeclarationStillConform(t *testing.T) {
-	// Backward compatibility: capability.v1 documents authored before R6.2b
-	// (no compatibleTargetTypes, only the free-form legacy target class) must
+	// Backward compatibility: capability.v1 documents authored before typed
+	// compatibility existed (no compatibleTargetTypes, only the free-form legacy target class) must
 	// keep validating unchanged.
 	if errs := mustValidate(t, positive); len(errs) != 0 {
 		t.Fatalf("legacy fixture should still conform, got %v", errs)

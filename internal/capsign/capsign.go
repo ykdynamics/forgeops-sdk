@@ -1,6 +1,6 @@
 // Package capsign provides the developer-side P-256 ECDSA signing for
-// Capability Packages (WP-R5.2c, capabilities#43), matching the registry's
-// publisher-key format (forgeops-platform WP-21.5): PEM PKIX P-256 public keys,
+// Capability Packages, matching the registry's
+// publisher-key format: PEM PKIX P-256 public keys,
 // a fingerprint of sha256(raw PKIX DER) hex, and a signature that is base64
 // ECDSA-ASN.1 over sha256 of the canonical manifest.
 package capsign
