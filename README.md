@@ -18,7 +18,7 @@ what changed and how to move.
 | `runtimecontract` | `runtime.v1`, the wire contract between an edge and a capability, with a client. A capability written from the contract alone, without the SDK, works the same. |
 | `capability` | The `capability.v1` package document: types, validation and compatibility rules. |
 | `buildrecipe` | The one recipe that builds a capability's executable bytes, for an explicit platform and compiler, so its digest is reproducible. Experimental API. |
-| `cmd/forgeops-cap` | The CLI: `init`, `validate`, `run`, `package`, `selfcheck`. |
+| `cmd/forgeops-cap` | The CLI: `init`, `validate`, `run`, `conformance`, `package`, `selfcheck`. |
 
 ## Quick start
 
@@ -30,6 +30,7 @@ forgeops-cap init example.service.status
 cd example-service-status
 forgeops-cap validate capability.yaml
 forgeops-cap run . --input '{"service":"example"}'
+forgeops-cap conformance . --input '{"service":"example"}'
 ```
 
 Before a release, from a checkout of this repository:
@@ -45,8 +46,17 @@ reproducible under the compiler that built it.
 
 ## What a local run proves, and what it does not
 
-- `forgeops-cap run` proves your capability builds and answers its contract on
-  your machine.
+- `forgeops-cap run` proves your capability builds and answers one sample input
+  on your machine.
+- `forgeops-cap conformance` checks your capability against its own
+  `capability.yaml`, through runtime.v1 as an edge calls it: it builds and is
+  healthy; a valid input (`--input`) runs and the answer matches your
+  `outputSchema`; input your `inputSchema` forbids (a missing required field,
+  an unknown field when `additionalProperties` is false) is refused as
+  `invalid_input`; and, with `--refuse-input`, an input it must decline (an
+  undeclared target) is refused or denied — never reported as a fault. Declare
+  your schemas with `sdk.WithContract` so the SDK enforces them; the scaffold
+  does.
 - `forgeops-cap selfcheck` proves this toolkit works on your machine, with its
   own sample. It does not check your capability.
 - Neither grants anything. What may run on a customer's edge is decided there,

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"go/parser"
 	"go/token"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -40,8 +42,37 @@ func TestSafeReadMainGoParses(t *testing.T) {
 	if !strings.Contains(src, "`json:\"service\"`") {
 		t.Fatal("generated main.go is missing the service JSON tag")
 	}
-	if !strings.Contains(src, "sdk.Serve(addr, status)") {
-		t.Fatal("generated main.go is missing the sdk.Serve wiring")
+	if !strings.Contains(src, "sdk.Serve(addr, status, sdk.WithContract(contract))") {
+		t.Fatal("generated main.go does not serve with its declared contract")
+	}
+}
+
+// The schemas the scaffolded main.go declares to the SDK are the ones its
+// capability.yaml declares: otherwise the capability would enforce one
+// contract and advertise another.
+func TestScaffoldContractMatchesItsManifest(t *testing.T) {
+	pkg, _, err := capability.ValidateDocument([]byte(safeReadYAML("acme.demo.status")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		name     string
+		manifest json.RawMessage
+		code     string
+	}{
+		{"input", pkg.Contract.InputSchema, scaffoldInputSchema},
+		{"output", pkg.Contract.OutputSchema, scaffoldOutputSchema},
+	} {
+		var fromYAML, fromCode any
+		if err := json.Unmarshal(c.manifest, &fromYAML); err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal([]byte(c.code), &fromCode); err != nil {
+			t.Fatalf("%s schema in code is not JSON: %v", c.name, err)
+		}
+		if !reflect.DeepEqual(fromYAML, fromCode) {
+			t.Fatalf("%s schema differs:\n capability.yaml %v\n main.go         %v", c.name, fromYAML, fromCode)
+		}
 	}
 }
 

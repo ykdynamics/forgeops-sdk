@@ -34,7 +34,11 @@ const (
 	ClassInvalidOutput = "invalid_output"
 	ClassTimeout       = "timeout"
 	ClassDenied        = "denied"
-	ClassInternal      = "internal"
+	// ClassRefused: the capability declines on authority grounds (asked to act
+	// outside what its deployment gave it, e.g. an undeclared target). Not a
+	// fault, so not reported as 5xx.
+	ClassRefused  = "refused"
+	ClassInternal = "internal"
 )
 
 // RunRequest is the executor -> capability envelope (POST /run body).

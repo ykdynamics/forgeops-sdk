@@ -87,10 +87,3 @@ func cmdSelfcheck(args []string) error {
 	fmt.Printf("selfcheck: all %d steps passed — the forgeops-cap toolkit works on this machine (its own sample; your capability is not checked)\n", len(steps))
 	return nil
 }
-
-// errNoProjectConformance answers `forgeops-cap conformance`. The name used to
-// run the self-check, which reads as if it checked the developer's capability.
-// Checking a project against the runtime contract is planned; until then the
-// command says so instead of passing on a sample.
-var errNoProjectConformance = fmt.Errorf("checking YOUR capability's conformance is not available yet; " +
-	"`forgeops-cap selfcheck` checks this toolkit with its own sample, and `forgeops-cap run <dir>` runs your capability locally")

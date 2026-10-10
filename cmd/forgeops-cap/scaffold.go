@@ -134,6 +134,15 @@ runtime:
 `, key, placeholderDigest, key)
 }
 
+// The scaffold's input and output schemas, as JSON: the generated main.go
+// declares them to the SDK (sdk.WithContract), so the capability enforces what
+// its capability.yaml declares. A test keeps them equal to the YAML above; and
+// forgeops-cap conformance checks the running capability against the YAML.
+const (
+	scaffoldInputSchema  = `{"type":"object","required":["service"],"additionalProperties":false,"properties":{"service":{"type":"string","minLength":1}}}`
+	scaffoldOutputSchema = `{"type":"object","required":["healthy"],"additionalProperties":false,"properties":{"healthy":{"type":"boolean"}}}`
+)
+
 func safeReadMainGo(key string) string {
 	// The backtick literals are built with %q-free concatenation so the raw
 	// struct tags survive the template intact.
@@ -144,11 +153,22 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/ykdynamics/forgeops-sdk/sdk"
 )
+
+// contract is contract.inputSchema and contract.outputSchema of capability.yaml.
+// With it, the SDK refuses input the manifest forbids before status runs, and
+// never lets an answer that breaks the output schema cross as success. Change
+// both together: forgeops-cap conformance checks the running capability
+// against capability.yaml.
+var contract = &sdk.Contract{
+	InputSchema:  json.RawMessage(%[2]s%[3]s%[2]s),
+	OutputSchema: json.RawMessage(%[2]s%[4]s%[2]s),
+}
 
 type input struct {
 	Service string %[2]sjson:"service"%[2]s
@@ -163,7 +183,7 @@ func main() {
 	if len(os.Args) >= 2 && os.Args[1] == "healthcheck" {
 		sdk.HealthcheckMain(addr)
 	}
-	if err := sdk.Serve(addr, status); err != nil {
+	if err := sdk.Serve(addr, status, sdk.WithContract(contract)); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -172,10 +192,11 @@ func main() {
 func status(ctx context.Context, rc *sdk.Context) (any, error) {
 	var in input
 	if err := rc.Bind(&in); err != nil {
-		return nil, fmt.Errorf("invalid input: %%w", err)
+		return nil, sdk.NewError(sdk.ClassInvalidInput, "input: %%v", err)
 	}
 	if in.Service == "" {
-		return nil, fmt.Errorf("service is required (the capability never chooses what to act on)")
+		// The capability never chooses what to act on.
+		return nil, sdk.NewError(sdk.ClassInvalidInput, "service is required")
 	}
 	_ = rc.Progress(ctx, 100, "status read complete")
 	return output{Healthy: true}, nil
@@ -187,7 +208,7 @@ func envDefault(k, def string) string {
 	}
 	return def
 }
-`, key, "`")
+`, key, "`", scaffoldInputSchema, scaffoldOutputSchema)
 }
 
 // renderGoMod writes the project's go.mod: it requires the forgeops-sdk
