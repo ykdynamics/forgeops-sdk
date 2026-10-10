@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ykdynamics/forgeops-sdk/artifact"
 	"github.com/ykdynamics/forgeops-sdk/buildrecipe"
 	"github.com/ykdynamics/forgeops-sdk/capability"
 	"github.com/ykdynamics/forgeops-sdk/internal/buildmeta"
@@ -38,6 +39,7 @@ func cmdPackage(args []string) error {
 	sbomOut := fs.String("sbom-out", "", "write supply-chain metadata here (sbom.json CycloneDX + provenance.json)")
 	platformFlag := fs.String("platform", "", "execution platform to build for (e.g. linux/arm64); must match identity.implementationPlatform when the manifest declares one")
 	allowHostPlatform := fs.Bool("allow-host-platform", false, "package for the host platform when the manifest declares none — for a local package that will only ever run where it was built")
+	artifactOut := fs.String("artifact-out", "", "also write the EXACT built executable as a single-platform OCI image layout here (for forgeops-cap push)")
 	dir, flagArgs := splitPositional(args)
 	_ = fs.Parse(flagArgs)
 	if dir == "" {
@@ -92,6 +94,28 @@ func cmdPackage(args []string) error {
 	// 2. Pin the ACTUAL artifact digest into the manifest (replacing the
 	// scaffold placeholder), and record the platform that digest describes.
 	artifactDigest := built.SHA256
+
+	// 2b. Keep the bytes that were hashed: the OCI image carries exactly them,
+	// never a rebuild, so the implementation digest and the image stay bound.
+	var image *artifact.Image
+	if *artifactOut != "" {
+		if hostFallback {
+			return fmt.Errorf("--artifact-out packages bytes for an edge; a host-platform package (--allow-host-platform) is not deliverable")
+		}
+		data, err := os.ReadFile(built.Path)
+		if err != nil {
+			return fmt.Errorf("read the built implementation: %w", err)
+		}
+		if artifact.Digest(data) != artifactDigest {
+			return fmt.Errorf("the built implementation changed after it was hashed")
+		}
+		if image, err = artifact.Build([]artifact.File{{Name: pkg.Identity.Key, Data: data}}, buildPlatform.OS, buildPlatform.Arch); err != nil {
+			return err
+		}
+		if err := artifact.WriteLayout(*artifactOut, image); err != nil {
+			return fmt.Errorf("write the OCI layout: %w", err)
+		}
+	}
 	packaged, err := setIdentity(raw, artifactDigest, buildPlatform.String())
 	if err != nil {
 		return err
@@ -156,6 +180,10 @@ func cmdPackage(args []string) error {
 	fmt.Printf("packaged %s@%s\n", pkg.Identity.Key, pkg.Identity.Version)
 	fmt.Printf("  artifact digest: %s\n", artifactDigest)
 	fmt.Printf("  built for: %s with %s\n", buildPlatform, built.Toolchain)
+	if image != nil {
+		fmt.Printf("  OCI image: %s (manifest %s, carrying %s as %q)\n", *artifactOut, image.ManifestDigest, artifactDigest, pkg.Identity.Key)
+		fmt.Println("  push it with: forgeops-cap push " + *artifactOut + " --repo <registry>/<path>")
+	}
 	if hostFallback {
 		fmt.Printf("  host-platform identity: --allow-host-platform was given and capability.yaml declares no identity.implementationPlatform,\n")
 		fmt.Printf("                          so this pin describes HOST bytes (%s) and must not be published as an edge package.\n", buildPlatform)
