@@ -18,7 +18,8 @@ what changed and how to move.
 | `runtimecontract` | `runtime.v1`, the wire contract between an edge and a capability, with a client. A capability written from the contract alone, without the SDK, works the same. |
 | `capability` | The `capability.v1` package document: types, validation and compatibility rules. |
 | `buildrecipe` | The one recipe that builds a capability's executable bytes, for an explicit platform and compiler, so its digest is reproducible. Experimental API. |
-| `cmd/forgeops-cap` | The CLI: `init`, `validate`, `run`, `conformance`, `package`, `selfcheck`. |
+| `artifact` | Delivery: the exact built bytes as a single-platform OCI image, pushed, and pulled **by digest** with every check an install needs (manifest and blobs against their digests, platform, safe extraction, implementation pin). Experimental API. |
+| `cmd/forgeops-cap` | The CLI: `init`, `validate`, `run`, `conformance`, `package`, `push`, `pull`, `selfcheck`. |
 
 ## Quick start
 
@@ -43,6 +44,28 @@ go build -o forgeops-cap ./cmd/forgeops-cap
 `init` writes a project that requires this SDK and pins the compiler it is
 qualified with (`toolchain` in `go.mod`), because a capability's digest is only
 reproducible under the compiler that built it.
+
+## Delivering a capability
+
+```bash
+forgeops-cap package . --platform linux/arm64 --out packaged.json --artifact-out oci/
+FORGEOPS_REGISTRY_PASSWORD=… forgeops-cap push oci/ --repo registry.example.com/you/inventory --user you
+forgeops-cap pull --repo registry.example.com/you/inventory --digest sha256:… \
+  --package packaged.json --out /opt/capabilities/inventory
+```
+
+Three identities stay separate and bound: the **implementation digest**
+(`identity.artifactDigest`, sha256 of the executable), the **package** (the
+canonical `capability.yaml`), and the **OCI manifest digest** printed by
+`push`. `package --artifact-out` packs the bytes it hashed, never a rebuild.
+`pull` asks for a digest, never a tag, so a moved tag changes nothing; it
+checks the manifest and every blob against their digests, refuses another
+platform, extracts only flat regular files into a staging directory, checks
+the executable against `identity.artifactDigest`, and only then replaces
+`--out`. A refused pull leaves the existing install as it was.
+
+The image format is the one ForgeOps edges already install from: one gzip
+layer of flat files, one platform per image.
 
 ## What a local run proves, and what it does not
 

@@ -31,7 +31,16 @@ commands:
                       builds for identity.implementationPlatform; --platform
                       <os>/<arch> supplies it when the manifest omits it, and
                       packaging is refused if neither is given
-                      (--allow-host-platform opts into host bytes explicitly)
+                      (--allow-host-platform opts into host bytes explicitly);
+                      --artifact-out <dir> also writes the EXACT built bytes as a
+                      single-platform OCI image layout
+  push <dir>          push that OCI layout and print its manifest digest
+                      (--repo host[:port]/path, --tag, --user, password from
+                      $FORGEOPS_REGISTRY_PASSWORD)
+  pull                fetch an image BY DIGEST, verify it against a packaged
+                      capability.yaml (platform, implementation digest, safe
+                      archive), and install it only if every check passed
+                      (--repo, --digest sha256:…, --package <yaml>, --out <dir>)
   publish-key         register the publisher P-256 public key with the registry
                       (<pub.pem> --registry <url> --token <jwt> --publisher <name>)
   publish             post a register payload to the registry
@@ -76,6 +85,16 @@ func main() {
 	case "publish":
 		if err := cmdPublish(os.Args[2:]); err != nil {
 			fmt.Fprintln(os.Stderr, "forgeops-cap publish:", err)
+			os.Exit(1)
+		}
+	case "push":
+		if err := cmdPush(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, "forgeops-cap push:", err)
+			os.Exit(1)
+		}
+	case "pull":
+		if err := cmdPull(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, "forgeops-cap pull:", err)
 			os.Exit(1)
 		}
 	case "publish-key":
