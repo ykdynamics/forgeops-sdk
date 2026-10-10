@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ykdynamics/forgeops-sdk/capability"
+	"github.com/ykdynamics/forgeops-sdk/runtimecontract"
 )
 
 // cmdRun builds the scaffolded capability and executes a sample input through
@@ -83,31 +83,19 @@ func cmdRun(args []string) error {
 
 	// Execute a sample input through the runtime contract (no runtime_url:
 	// progress/secret callbacks no-op, which is correct for a local safe read).
-	payload, _ := json.Marshal(map[string]any{
-		"run_id": "forgeops-cap-local", "input": json.RawMessage(*input),
-	})
-	resp, err := http.Post("http://"+*addr+"/run", "application/json", bytes.NewReader(payload))
+	// A failure carries runtime.v1's structured body, {error, error_class}.
+	res, err := runtimecontract.NewClient(30*time.Second).Run(context.Background(), "http://"+*addr,
+		runtimecontract.RunRequest{RunID: "forgeops-cap-local", Input: json.RawMessage(*input)})
 	if err != nil {
 		return fmt.Errorf("execute run: %w", err)
 	}
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-
-	if resp.StatusCode != 200 {
-		var se struct {
-			Class   string `json:"class"`
-			Message string `json:"message"`
-		}
-		_ = json.Unmarshal(body, &se)
-		if se.Message != "" {
-			return fmt.Errorf("run failed (%s): %s", se.Class, se.Message)
-		}
-		return fmt.Errorf("run failed: HTTP %d %s", resp.StatusCode, string(body))
+	if res.StatusCode != 200 {
+		return fmt.Errorf("run failed: HTTP %d %s: %s", res.StatusCode, res.Error.ErrorClass, res.Error.Error)
 	}
 
 	fmt.Printf("OK: %s@%s executed a sample input\n", pkg.Identity.Key, pkg.Identity.Version)
 	fmt.Printf("  input : %s\n", *input)
-	fmt.Printf("  output: %s\n", prettyJSON(body))
+	fmt.Printf("  output: %s\n", prettyJSON(res.Output))
 	return nil
 }
 

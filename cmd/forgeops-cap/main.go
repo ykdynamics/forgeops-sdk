@@ -36,6 +36,11 @@ commands:
                       (<pub.pem> --registry <url> --token <jwt> --publisher <name>)
   publish             post a register payload to the registry
                       (<register.json> --registry <url> --token <jwt>)
+  conformance <dir>   check YOUR capability against its own capability.yaml on this
+                      machine: it builds, answers, keeps its output schema, refuses
+                      input the schema forbids as invalid_input, and declines
+                      without reporting a fault (--input <valid json>,
+                      --refuse-input <json it must decline>)
   selfcheck           check this toolkit on this machine with its own sample
                       (scaffold -> validate -> package -> run; --key adds sign).
                       It does not check your capability.
@@ -84,8 +89,10 @@ func main() {
 			os.Exit(1)
 		}
 	case "conformance":
-		fmt.Fprintln(os.Stderr, "forgeops-cap conformance:", errNoProjectConformance)
-		os.Exit(2)
+		if err := cmdConformance(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, "forgeops-cap conformance:", err)
+			os.Exit(1)
+		}
 	case "version", "--version", "-v":
 		if v := sdkVersion(); v != "" {
 			fmt.Println("forgeops-cap", v)
