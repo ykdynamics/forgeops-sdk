@@ -79,7 +79,11 @@ layer of flat files, one platform per image.
   `invalid_input`; and, with `--refuse-input`, an input it must decline (an
   undeclared target) is refused or denied — never reported as a fault. Declare
   your schemas with `sdk.WithContract` so the SDK enforces them; the scaffold
-  does.
+  does. When `capability.yaml` declares a `requesterOutputSchema` (what the
+  capability proposes to disclose to the requester), conformance also checks
+  that the answer projects onto it — the same projection a platform applies.
+  The customer decides, when binding your package, whether that disclosure
+  happens at all.
 - `forgeops-cap selfcheck` proves this toolkit works on your machine, with its
   own sample. It does not check your capability.
 - Neither grants anything. What may run on a customer's edge is decided there,

@@ -125,6 +125,15 @@ contract:
     properties:
       healthy:
         type: boolean
+  # What this capability proposes to disclose to the requester: a subset of
+  # outputSchema. The customer approves it, or not, when binding this package.
+  requesterOutputSchema:
+    type: object
+    required: [healthy]
+    additionalProperties: false
+    properties:
+      healthy:
+        type: boolean
 executionBoundary:
   risk: allow
   egress: []

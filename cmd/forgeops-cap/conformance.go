@@ -101,6 +101,15 @@ func cmdConformance(args []string) error {
 				} else {
 					r.pass("valid input runs", "HTTP 200")
 					r.pass("output matches outputSchema", oneLine(res.Output))
+					// What a requester would receive if the customer approves
+					// the disclosure: the same projection a platform applies.
+					if len(pkg.Contract.RequesterOutputSchema) > 0 {
+						if got, err := capability.ProjectRequesterOutput(pkg, res.Output); err != nil {
+							r.fail("requester output projects", "%v (answer: %s)", err, oneLine(res.Output))
+						} else {
+							r.pass("requester output projects", string(got))
+						}
+					}
 				}
 			}
 		}

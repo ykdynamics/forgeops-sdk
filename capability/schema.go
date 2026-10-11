@@ -80,6 +80,19 @@ type Contract struct {
 	InputSchema json.RawMessage `json:"inputSchema" yaml:"inputSchema"`
 	// OutputSchema is the JSON Schema for the result.
 	OutputSchema json.RawMessage `json:"outputSchema" yaml:"outputSchema"`
+	// RequesterOutputSchema is the part of the result this package PROPOSES to
+	// disclose to whoever requested the operation: an object schema naming a
+	// subset of OutputSchema's properties. Absent means nothing is proposed, so
+	// a requester receives the status and no result. Even when declared, the
+	// result reaches a requester only if the customer approves this disclosure
+	// for this exact package when binding it; ProjectRequesterOutput is what is
+	// then returned.
+	//
+	// Compatibility rule: the field only ever RESTRICTS what leaves a customer's
+	// edge. A consumer that does not implement it must treat every package as
+	// proposing no requester-facing output and disclose no result to
+	// requesters -- never fall back to passing the full result on.
+	RequesterOutputSchema json.RawMessage `json:"requesterOutputSchema,omitempty" yaml:"requesterOutputSchema,omitempty"`
 	// IdempotencyKey is the required input field (dotted path) mutation
 	// capabilities use as their stable intended-effect key.
 	IdempotencyKey string `json:"idempotencyKey,omitempty" yaml:"idempotencyKey,omitempty"`

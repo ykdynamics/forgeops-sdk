@@ -110,7 +110,83 @@ func validateContract(c Contract) []Error {
 	} else if msg := jsonSchemaShape(c.OutputSchema); msg != "" {
 		errs = append(errs, Error{Field: "contract.outputSchema", Message: msg})
 	}
+	if len(c.RequesterOutputSchema) > 0 {
+		for _, msg := range requesterOutputShape(c.RequesterOutputSchema, c.OutputSchema) {
+			errs = append(errs, Error{Field: "contract.requesterOutputSchema", Message: msg})
+		}
+	}
 	return errs
+}
+
+// requesterOutputShape checks the disclosure declaration: an object schema
+// whose properties are all output properties, and that does not admit
+// anything else. It narrows the output; it never widens it.
+func requesterOutputShape(raw, output json.RawMessage) []string {
+	if msg := jsonSchemaShape(raw); msg != "" {
+		return []string{msg}
+	}
+	var s, o struct {
+		Type                 string                     `json:"type"`
+		Properties           map[string]json.RawMessage `json:"properties"`
+		AdditionalProperties any                        `json:"additionalProperties"`
+	}
+	if err := json.Unmarshal(raw, &s); err != nil {
+		return []string{"must be a JSON Schema object"}
+	}
+	var msgs []string
+	if s.Type != "object" {
+		msgs = append(msgs, `must be "type": "object": a requester receives named fields, never a raw value`)
+	}
+	if len(s.Properties) == 0 {
+		msgs = append(msgs, "must name at least one property (absent the field instead, to propose nothing)")
+	}
+	if b, ok := s.AdditionalProperties.(bool); ok && b {
+		msgs = append(msgs, "must not admit additional properties: it names exactly what may be disclosed")
+	}
+	_ = json.Unmarshal(output, &o)
+	for name, prop := range s.Properties {
+		if _, ok := o.Properties[name]; !ok {
+			msgs = append(msgs, fmt.Sprintf("names %q, which outputSchema does not declare: it can only narrow the output", name))
+		}
+		if msg := scalarProperty(prop); msg != "" {
+			msgs = append(msgs, fmt.Sprintf("property %q %s", name, msg))
+		}
+	}
+	sort.Strings(msgs)
+	return msgs
+}
+
+// scalarProperty reports why a requester-output property is not supported, or
+// "". Only scalars and arrays of scalars are: projection is one level deep, so
+// a nested object (or an array of them) would pass whole, with every field the
+// declaration does not name. Rejected rather than half-projected.
+func scalarProperty(raw json.RawMessage) string {
+	var p struct {
+		Type  string `json:"type"`
+		Items *struct {
+			Type string `json:"type"`
+		} `json:"items"`
+	}
+	if err := json.Unmarshal(raw, &p); err != nil {
+		return "must be a JSON Schema object"
+	}
+	switch p.Type {
+	case "string", "number", "integer", "boolean", "null":
+		return ""
+	case "array":
+		if p.Items == nil {
+			return "is an array with no items schema: declare scalar items"
+		}
+		switch p.Items.Type {
+		case "string", "number", "integer", "boolean", "null":
+			return ""
+		}
+		return "is an array of non-scalar items: nested structures are not supported in requester output"
+	case "":
+		return "declares no type: name a scalar type (string, number, integer, boolean, null) or an array of one"
+	default:
+		return fmt.Sprintf("is of type %q: nested structures are not supported in requester output", p.Type)
+	}
 }
 
 func validateBoundary(b ExecutionBoundary) []Error {
