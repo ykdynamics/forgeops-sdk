@@ -22,6 +22,7 @@ contract:
   description: ...
   inputSchema: {...}                # JSON Schema (typed input)
   outputSchema: {...}               # JSON Schema (typed output)
+  requesterOutputSchema: {...}      # what it proposes to disclose to the requester (optional)
   idempotencyKey: receipt           # mutation intended-effect key (optional)
 executionBoundary:                  # what the capability requests to touch
   risk: ask                         # allow | ask | deny
@@ -33,6 +34,32 @@ runtime:
   interface: mcp
   runtimeContract: runtime.v1
 ```
+
+`requesterOutputSchema` is what the capability **proposes** to disclose to
+whoever requested the operation: an object schema naming a subset of
+`outputSchema`'s properties (it can only narrow the output, never widen it).
+Absent, nothing is proposed: a requester receives the status and no result.
+Declared, the result still reaches a requester only if the customer approves
+this disclosure for this exact package when binding it; what is then returned
+is `ProjectRequesterOutput`: the result must first satisfy `outputSchema`, then
+only the named properties are kept and validated against the declaration.
+Diagnostics, logs and any other output stay with the customer. Projection is
+one level deep, so a declared property must be a scalar (`string`, `number`,
+`integer`, `boolean`, `null`) or an array of scalars; nested objects and arrays
+of them are refused, at validation and again at projection.
+
+The declaration is part of the canonical document, so it is covered by the
+manifest digest (the revision identity) and by the publisher's signature:
+changing what is proposed for disclosure is a new revision, and an existing
+signature does not cover it.
+
+**Compatibility rule.** `requesterOutputSchema` only ever *restricts* what
+leaves a customer's edge. A consumer that does not implement it — an older
+SDK, registry or platform — must treat every package as proposing **no**
+requester-facing output and disclose no result to requesters; it must never
+fall back to passing the full result on. A consumer that implements it applies
+`ProjectRequesterOutput` (or the same rules) together with the customer's
+binding decision.
 
 `target` and `compatibleTargetTypes` are different things: `target` is the
 runtime **access-scope class** this package may reach, `compatibleTargetTypes`
