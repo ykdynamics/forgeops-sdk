@@ -10,7 +10,7 @@ TOOLCHAIN := $(shell sed -n 's/^toolchain //p' go.mod)
 PLATFORMS := linux/amd64 linux/arm64
 DIST      := dist
 
-.PHONY: check fmt-check vet test deps-check release-build release-tag clean
+.PHONY: check fmt-check vet test deps-check outsider-check release-build release-tag clean
 
 ## check: everything CI runs on a pull request
 check: fmt-check vet test deps-check
@@ -30,6 +30,13 @@ deps-check:
 	@extra="$$(go list -deps ./... | grep '\.' | grep -v '^$(MODULE)' | grep -v '^vendor/' | grep -v '^crypto/internal/' | grep -v '^gopkg.in/yaml.v3$$' || true)"; \
 	if [ -n "$$extra" ]; then echo "unexpected dependencies:"; echo "$$extra"; exit 1; fi; \
 	echo "dependencies: standard library + gopkg.in/yaml.v3 only"
+
+## outsider-check SDK_VERSION=vX.Y.Z[-pre] [CLI=tree|release]: an outside
+## developer's first steps from nothing (fresh module cache, default go
+## settings, the release from the public proxy). Needs the network, so it is
+## not part of check. See scripts/outsider-check.sh.
+outsider-check:
+	SDK_VERSION='$(SDK_VERSION)' CLI='$(CLI)' bash scripts/outsider-check.sh
 
 ## release-build VERSION=vX.Y.Z[-pre]: forgeops-cap for each platform, built with
 ## the pinned toolchain and the version stamped in, as tarballs + SHA256SUMS.
