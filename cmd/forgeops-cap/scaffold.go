@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime/debug"
@@ -98,8 +99,39 @@ func cmdInit(args []string) error {
 		}
 	}
 	fmt.Printf("scaffolded %s in %s\n", key, projectDir)
-	fmt.Println("  next: cd " + projectDir + " && forgeops-cap validate capability.yaml && forgeops-cap run .")
+	next := "cd " + projectDir + " && "
+	if err := completeModule(projectDir); err != nil {
+		fmt.Printf("  go.sum not written (%v): run `go mod tidy` in %s before building\n", err, projectDir)
+		next += "go mod tidy && "
+	}
+	fmt.Println("  next: " + next + "forgeops-cap validate capability.yaml && forgeops-cap run .")
 	return nil
+}
+
+// completeModule resolves the project's module graph and writes go.sum, so the
+// first build works with Go's default -mod=readonly. It needs the go command
+// and, for a released SDK, the module proxy; without either, init still
+// scaffolds and says what to run (forgeops-sdk#7).
+func completeModule(dir string) error {
+	gobin, err := exec.LookPath("go")
+	if err != nil {
+		return fmt.Errorf("no go command on PATH")
+	}
+	tidy := exec.Command(gobin, "mod", "tidy")
+	tidy.Dir = dir
+	tidy.Env = append(os.Environ(), "GOWORK=off") // the project's own module, never an enclosing workspace
+	if out, err := tidy.CombinedOutput(); err != nil {
+		return fmt.Errorf("go mod tidy: %s", lastLine(out, err))
+	}
+	return nil
+}
+
+func lastLine(out []byte, err error) string {
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	if last := strings.TrimSpace(lines[len(lines)-1]); last != "" {
+		return last
+	}
+	return err.Error()
 }
 
 func safeReadYAML(key string) string {
@@ -262,6 +294,8 @@ Capability Package v1 project scaffolded by forgeops-cap init.
 - main.go         — SDK-based safe-read implementation
 - go.mod          — requires the ForgeOps SDK (github.com/ykdynamics/forgeops-sdk)
                     and pins the compiler its digests are reproducible with
+- go.sum          — written by init (go mod tidy); if init said it could not,
+                    run go mod tidy here once before building
 
 Running locally proves the capability builds and answers. It grants nothing:
 a customer's edge decides what may run there, and its owner approves.

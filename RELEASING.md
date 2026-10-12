@@ -23,6 +23,11 @@ byte-identical binaries, so anyone can rebuild and compare.
    make check
    make release-build VERSION=v0.1.0-preview.1   # look at dist/, then: make clean
    ```
+   And an outside developer's first steps with this tree's `forgeops-cap`,
+   against the latest published SDK (needs the network):
+   ```bash
+   make outsider-check SDK_VERSION=<latest published release>
+   ```
 3. **Tag on an up-to-date, clean `main`:**
    ```bash
    git checkout main && git pull --ff-only origin main
@@ -36,6 +41,10 @@ byte-identical binaries, so anyone can rebuild and compare.
    and creates a **draft** GitHub release, marked pre-release when the version
    has a `-` suffix.
 5. **Review the draft** (assets, checksums, notes) and publish it on GitHub.
+6. **Walk the published journey** once the module proxy serves the tag:
+   ```bash
+   make outsider-check SDK_VERSION=v0.1.0-preview.1 CLI=release
+   ```
 
 ## Rules
 

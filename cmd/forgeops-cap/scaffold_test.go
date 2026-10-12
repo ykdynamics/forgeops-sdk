@@ -141,6 +141,9 @@ func TestInitWithoutAReleaseAsksForOne(t *testing.T) {
 
 // The scaffolded project builds against this SDK tree, outside it: the
 // developer's journey, with a replace standing in for the released module.
+// It builds exactly as a developer's `go build` does: -mod=readonly, nothing
+// in GOFLAGS that would write a missing go.sum on the fly (forgeops-sdk#7).
+// init itself must leave a complete module, its toolchain pin intact.
 func TestScaffoldedProjectBuilds(t *testing.T) {
 	if testing.Short() {
 		t.Skip("builds a project with the go toolchain")
@@ -157,11 +160,32 @@ func TestScaffoldedProjectBuilds(t *testing.T) {
 	if err := cmdInit([]string{"acme.demo.status", "--sdk-replace", root}); err != nil {
 		t.Fatalf("init: %v", err)
 	}
-	build := exec.Command("go", "build", "-o", filepath.Join(dir, "capability-bin"), ".")
-	build.Dir = filepath.Join(dir, "acme-demo-status")
-	build.Env = append(os.Environ(), "GOFLAGS=-mod=mod", "GOWORK=off")
+	// A local replace needs no checksums, so go.sum may legitimately be absent
+	// here; a released SDK's are checked by `make outsider-check`.
+	project := filepath.Join(dir, "acme-demo-status")
+	mod, err := os.ReadFile(filepath.Join(project, "go.mod"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"toolchain " + buildrecipe.PinnedToolchain, "require " + sdkModule + " v0.0.0"} {
+		if !strings.Contains(string(mod), want) {
+			t.Fatalf("go.mod after init lost %q:\n%s", want, mod)
+		}
+	}
+	build := exec.Command("go", "build", "-mod=readonly", "-o", filepath.Join(dir, "capability-bin"), ".")
+	build.Dir = project
+	build.Env = append(os.Environ(), "GOFLAGS=", "GOWORK=off")
 	if out, err := build.CombinedOutput(); err != nil {
-		t.Fatalf("the scaffolded project does not build: %v\n%s", err, out)
+		t.Fatalf("the scaffolded project does not build as a developer builds it: %v\n%s", err, out)
+	}
+}
+
+// Without the go command, init cannot complete the module; it says so (and
+// the next step names go mod tidy) instead of leaving a silent first failure.
+func TestCompleteModuleNeedsTheGoCommand(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	if err := completeModule(t.TempDir()); err == nil || !strings.Contains(err.Error(), "no go command") {
+		t.Fatalf("completeModule without go = %v, want a named reason", err)
 	}
 }
 
